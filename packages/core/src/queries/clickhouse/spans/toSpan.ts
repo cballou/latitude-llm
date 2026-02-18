@@ -5,7 +5,7 @@ import {
   SpanStatus,
   SpanType,
 } from '@latitude-data/constants'
-import { SpanRow } from '../../../clickhouse/models/spans'
+import { SpanRow } from '../../../schema/models/clickhouse/spans'
 import { orUndefined, parseClickHouseDate } from '../../../lib/typeConversions'
 
 export function spanRowToSpan(row: SpanRow): Span {

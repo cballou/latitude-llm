@@ -225,14 +225,14 @@ export async function getSpansFromSpanAndTraceIdPairs({
   )
   const commitsRepo = new CommitsRepository(workspace.id)
   const commitHistory = await commitsRepo.getCommitsHistory({ commit })
-  const commitHistoryIds = commitHistory.map((c) => c.id)
+  const commitHistoryUuids = commitHistory.map((c) => c.uuid)
 
   const evaluationUuids = evaluations.map((e) => e.uuid)
   const evaluationResults =
     await evaluationResultsRepository.listBySpanAndEvaluations({
       spans,
       evaluationUuids,
-      commitHistoryIds,
+      commitHistoryUuids,
     })
 
   return buildSpanMessagesWithReasons({

@@ -15,19 +15,19 @@ function CommitCheckbox({
   onSelectCommits,
 }: {
   commit: Commit
-  selectedCommitsIds: number[]
-  onSelectCommits: (selectedCommitsIds: number[]) => void
+  selectedCommitsIds: string[]
+  onSelectCommits: (selectedCommitsIds: string[]) => void
 }) {
   const isSelected = useMemo(
-    () => selectedCommitsIds.includes(commit.id),
+    () => selectedCommitsIds.includes(commit.uuid),
     [selectedCommitsIds, commit],
   )
 
   const onSelect = useCallback(() => {
     onSelectCommits(
       isSelected
-        ? selectedCommitsIds.filter((id) => id !== commit.id)
-        : [...selectedCommitsIds, commit.id],
+        ? selectedCommitsIds.filter((id) => id !== commit.uuid)
+        : [...selectedCommitsIds, commit.uuid],
     )
   }, [selectedCommitsIds, commit, isSelected, onSelectCommits])
 
@@ -57,8 +57,8 @@ function CommitsList({
 }: {
   title: string
   commits: Commit[]
-  selectedCommitsIds: number[]
-  onSelectCommits: (selectedCommitsIds: number[]) => void
+  selectedCommitsIds: string[]
+  onSelectCommits: (selectedCommitsIds: string[]) => void
 }) {
   return (
     <div className='flex flex-col gap-2 w-full'>
@@ -85,8 +85,8 @@ export function CommitFilter({
   reset,
   disabled,
 }: {
-  selectedCommitsIds: number[]
-  onSelectCommits: (selectedCommitsIds: number[]) => void
+  selectedCommitsIds: string[]
+  onSelectCommits: (selectedCommitsIds: string[]) => void
   isDefault: boolean
   reset: () => void
   disabled?: boolean
@@ -118,7 +118,7 @@ export function CommitFilter({
       return `${selectedCommitsIds.length} versions`
     }
     const selectedCommit = commits.find(
-      (commit) => commit.id === selectedCommitsIds[0],
+      (commit) => commit.uuid === selectedCommitsIds[0],
     )
     return selectedCommit?.title ?? '1 version'
   }, [isDefault, selectedCommitsIds, commits])
@@ -138,7 +138,7 @@ export function CommitFilter({
         <Checkbox
           checked={headerState}
           onClick={() =>
-            onSelectCommits(headerState ? [] : commits.map((c) => c.id))
+            onSelectCommits(headerState ? [] : commits.map((c) => c.uuid))
           }
           label={
             <Text.H5 noWrap ellipsis>

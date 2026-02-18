@@ -1,6 +1,6 @@
 import { LogSources, SpanType } from '@latitude-data/constants'
 import { clickhouseClient } from '../../../client/clickhouse'
-import { SPANS_TABLE } from '../../../clickhouse/models/spans'
+import { TABLE_NAME } from '../../../schema/models/clickhouse/spans'
 import { toClickHouseDateTime } from '../../../clickhouse/insert'
 import { CreatedAtRange } from '../../../services/spans/defaultCreatedAtWindow'
 import { scopedQuery } from '../../scope'
@@ -133,7 +133,7 @@ export const fetchConversations = scopedQuery(async function fetchConversations(
         anyLast(source) AS latest_source,
         anyLast(commit_uuid) AS latest_commit_uuid,
         anyLast(experiment_uuid) AS latest_experiment_uuid
-      FROM ${SPANS_TABLE}
+      FROM ${TABLE_NAME}
       WHERE ${conditions.join(' AND ')}
       GROUP BY document_log_uuid
       ORDER BY latest_started_at DESC, document_log_uuid DESC

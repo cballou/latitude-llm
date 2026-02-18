@@ -1,6 +1,6 @@
 import { SpanType } from '@latitude-data/constants'
 import { clickhouseClient } from '../../../client/clickhouse'
-import { SPANS_TABLE } from '../../../clickhouse/models/spans'
+import { TABLE_NAME } from '../../../schema/models/clickhouse/spans'
 import { toClickHouseDateTime } from '../../../clickhouse/insert'
 import { scopedQuery } from '../../scope'
 
@@ -22,7 +22,7 @@ export const getExperimentPromptSpansBefore = scopedQuery(
     const result = await clickhouseClient().query({
       query: `
       SELECT span_id, trace_id
-      FROM ${SPANS_TABLE}
+      FROM ${TABLE_NAME}
       WHERE workspace_id = {workspaceId: UInt64}
         -- TODO(clickhouse): remove non-_key predicate after key-column rollout.
         AND document_uuid = {documentUuid: UUID}

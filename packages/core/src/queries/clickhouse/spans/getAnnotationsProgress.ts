@@ -1,5 +1,5 @@
 import { clickhouseClient } from '../../../client/clickhouse'
-import { SPANS_TABLE } from '../../../clickhouse/models/spans'
+import { TABLE_NAME } from '../../../schema/models/clickhouse/spans'
 import { toClickHouseDateTime } from '../../../clickhouse/insert'
 import { LogSources } from '@latitude-data/constants'
 import { scopedQuery } from '../../scope'
@@ -24,7 +24,7 @@ export const countSpansForAnnotations = scopedQuery(
     const result = await clickhouseClient().query({
       query: `
       SELECT count() AS total_count
-      FROM ${SPANS_TABLE}
+      FROM ${TABLE_NAME}
       WHERE workspace_id = {workspaceId: UInt64}
         -- TODO(clickhouse): remove non-_key predicate after key-column rollout.
         AND commit_uuid IN ({commitUuids: Array(UUID)})

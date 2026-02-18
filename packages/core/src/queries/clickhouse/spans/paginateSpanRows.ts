@@ -1,5 +1,5 @@
 import { MainSpanType, Span } from '@latitude-data/constants'
-import { SpanRow } from '../../../clickhouse/models/spans'
+import { SpanRow } from '../../../schema/models/clickhouse/spans'
 import { spanRowToSpan } from './toSpan'
 
 export function paginateSpanRows(rows: SpanRow[], limit: number) {

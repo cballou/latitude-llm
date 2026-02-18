@@ -1,5 +1,3 @@
-export const EVALUATION_RESULTS_TABLE = 'evaluation_results' as const
-
 export type EvaluationResultV2Row = {
   id: number
   workspace_id: number
@@ -24,6 +22,47 @@ export type EvaluationResultV2Row = {
   cost: number | null
   metadata: string | null
   error: string | null
+  issue_ids: number[]
   created_at: string
   updated_at: string
 }
+
+export type EvaluationResultV2Input = Omit<EvaluationResultV2Row, 'id'>
+
+export const TABLE_NAME = 'evaluation_results' as const
+export const TABLE_CONFIG = {
+  engine: 'ReplacingMergeTree',
+  primaryKey: ['workspace_id', 'project_id', 'evaluation_uuid', 'created_at'],
+  orderBy: [
+    'workspace_id',
+    'project_id',
+    'evaluation_uuid',
+    'created_at',
+    'id',
+  ],
+  partitionBy: 'toYYYYMM(created_at)',
+  indices: [
+    { name: 'idx_uuid', columns: ['uuid'], type: 'bloom_filter' },
+    { name: 'idx_commit_uuid', columns: ['commit_uuid'], type: 'bloom_filter' },
+    {
+      name: 'idx_document_uuid',
+      columns: ['document_uuid'],
+      type: 'bloom_filter',
+    },
+    {
+      name: 'idx_experiment_id',
+      columns: ['experiment_id'],
+      type: 'bloom_filter',
+    },
+    {
+      name: 'idx_evaluated_trace_id',
+      columns: ['evaluated_trace_id'],
+      type: 'bloom_filter',
+    },
+    {
+      name: 'idx_evaluated_trace_span',
+      columns: ['evaluated_span_id', 'evaluated_trace_id'],
+      type: 'bloom_filter',
+    },
+  ],
+} as const

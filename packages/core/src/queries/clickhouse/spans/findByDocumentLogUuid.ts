@@ -1,6 +1,6 @@
 import { MAIN_SPAN_TYPES, Span } from '@latitude-data/constants'
 import { clickhouseClient } from '../../../client/clickhouse'
-import { SPANS_TABLE, SpanRow } from '../../../clickhouse/models/spans'
+import { TABLE_NAME, SpanRow } from '../../../schema/models/clickhouse/spans'
 import { scopedQuery } from '../../scope'
 import { spanRowToSpan } from './toSpan'
 
@@ -18,7 +18,7 @@ export const getLastTraceByLogUuid = scopedQuery(
     const result = await clickhouseClient().query({
       query: `
       SELECT trace_id
-      FROM ${SPANS_TABLE}
+      FROM ${TABLE_NAME}
       WHERE workspace_id = {workspaceId: UInt64}
         AND document_log_uuid = {logUuid: UUID}
       ORDER BY started_at DESC
@@ -47,7 +47,7 @@ export const listTraceIdsByLogUuid = scopedQuery(
     const result = await clickhouseClient().query({
       query: `
       SELECT DISTINCT trace_id
-      FROM ${SPANS_TABLE}
+      FROM ${TABLE_NAME}
       WHERE workspace_id = {workspaceId: UInt64}
         AND document_log_uuid = {logUuid: UUID}
       ORDER BY trace_id ASC
@@ -77,7 +77,7 @@ export const findByDocumentLogUuids = scopedQuery(
     const result = await clickhouseClient().query({
       query: `
       SELECT *
-      FROM ${SPANS_TABLE} FINAL
+      FROM ${TABLE_NAME} FINAL
       WHERE workspace_id = {workspaceId: UInt64}
         AND document_log_uuid IN ({documentLogUuids: Array(UUID)})
     `,
@@ -104,7 +104,7 @@ export const findByDocumentLogUuid = scopedQuery(
     const result = await clickhouseClient().query({
       query: `
       SELECT *
-      FROM ${SPANS_TABLE}
+      FROM ${TABLE_NAME}
       WHERE workspace_id = {workspaceId: UInt64}
         AND document_log_uuid = {documentLogUuid: UUID}
       ORDER BY ingested_at DESC
@@ -134,7 +134,7 @@ export const listByDocumentLogUuid = scopedQuery(
     const result = await clickhouseClient().query({
       query: `
       SELECT *
-      FROM ${SPANS_TABLE} FINAL
+      FROM ${TABLE_NAME} FINAL
       WHERE workspace_id = {workspaceId: UInt64}
         AND document_log_uuid = {documentLogUuid: UUID}
       ORDER BY started_at ASC, span_id ASC
@@ -164,7 +164,7 @@ export const findLastMainSpanByDocumentLogUuid = scopedQuery(
     const result = await clickhouseClient().query({
       query: `
       SELECT *
-      FROM ${SPANS_TABLE}
+      FROM ${TABLE_NAME}
       WHERE workspace_id = {workspaceId: UInt64}
         AND document_log_uuid = {documentLogUuid: UUID}
         AND type IN ({mainTypes: Array(String)})
@@ -197,7 +197,7 @@ export const findFirstMainSpanByDocumentLogUuid = scopedQuery(
     const result = await clickhouseClient().query({
       query: `
       SELECT *
-      FROM ${SPANS_TABLE}
+      FROM ${TABLE_NAME}
       WHERE workspace_id = {workspaceId: UInt64}
         AND document_log_uuid = {documentLogUuid: UUID}
         AND type IN ({mainTypes: Array(String)})
@@ -230,7 +230,7 @@ export const getSpanIdentifiersByDocumentLogUuids = scopedQuery(
     const result = await clickhouseClient().query({
       query: `
       SELECT trace_id, span_id
-      FROM ${SPANS_TABLE}
+      FROM ${TABLE_NAME}
       WHERE workspace_id = {workspaceId: UInt64}
         AND document_log_uuid IN ({documentLogUuids: Array(UUID)})
     `,

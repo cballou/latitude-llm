@@ -1,6 +1,6 @@
 import { Span } from '@latitude-data/constants'
 import { clickhouseClient } from '../../../client/clickhouse'
-import { SPANS_TABLE, SpanRow } from '../../../clickhouse/models/spans'
+import { TABLE_NAME, SpanRow } from '../../../schema/models/clickhouse/spans'
 import { Result, TypedResult } from '../../../lib/Result'
 import { scopedQuery } from '../../scope'
 import { spanRowToSpan } from './toSpan'
@@ -20,7 +20,7 @@ export const findSpan = scopedQuery(async function findSpan(
   const result = await clickhouseClient().query({
     query: `
       SELECT *
-      FROM ${SPANS_TABLE}
+      FROM ${TABLE_NAME}
       WHERE workspace_id = {workspaceId: UInt64}
         AND trace_id = {traceId: String}
         AND span_id = {spanId: String}

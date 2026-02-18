@@ -5,7 +5,7 @@ import {
   SpanStatus,
 } from '@latitude-data/constants'
 import { clickhouseClient } from '../../../client/clickhouse'
-import { SPANS_TABLE, SpanRow } from '../../../clickhouse/models/spans'
+import { TABLE_NAME, SpanRow } from '../../../schema/models/clickhouse/spans'
 import { toClickHouseDateTime } from '../../../clickhouse/insert'
 import { scopedQuery } from '../../scope'
 import { buildExperimentExclusionCondition } from './buildExperimentExclusionCondition'
@@ -71,7 +71,7 @@ export const getSpansByDocument = scopedQuery(async function getSpansByDocument(
   const result = await clickhouseClient().query({
     query: `
       SELECT *
-      FROM ${SPANS_TABLE}
+      FROM ${TABLE_NAME}
       WHERE ${conditions.join(' AND ')}
       ORDER BY started_at DESC, span_id DESC
       LIMIT {fetchLimit: UInt32}

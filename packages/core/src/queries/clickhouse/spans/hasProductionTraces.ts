@@ -1,6 +1,6 @@
 import { RUN_SOURCES, RunSourceGroup } from '@latitude-data/constants'
 import { clickhouseClient } from '../../../client/clickhouse'
-import { SPANS_TABLE } from '../../../clickhouse/models/spans'
+import { TABLE_NAME } from '../../../schema/models/clickhouse/spans'
 import { scopedQuery } from '../../scope'
 
 export const hasProductionTraces = scopedQuery(
@@ -30,7 +30,7 @@ export const hasProductionTraces = scopedQuery(
     const result = await clickhouseClient().query({
       query: `
       SELECT 1 AS exists
-      FROM ${SPANS_TABLE}
+      FROM ${TABLE_NAME}
       WHERE workspace_id = {workspaceId: UInt64}
         AND source = {source: String}
         ${projectFilter}

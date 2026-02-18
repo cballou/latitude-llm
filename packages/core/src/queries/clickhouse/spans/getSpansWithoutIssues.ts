@@ -5,7 +5,7 @@ import {
   SpanStatus,
 } from '@latitude-data/constants'
 import { clickhouseClient } from '../../../client/clickhouse'
-import { SPANS_TABLE, SpanRow } from '../../../clickhouse/models/spans'
+import { TABLE_NAME, SpanRow } from '../../../schema/models/clickhouse/spans'
 import { toClickHouseDateTime } from '../../../clickhouse/insert'
 import { Cursor } from '../../../schema/types'
 import { scopedQuery } from '../../scope'
@@ -93,7 +93,7 @@ export const getSpansWithoutIssues = scopedQuery(
     const result = await clickhouseClient().query({
       query: `
       SELECT *
-      FROM ${SPANS_TABLE}
+      FROM ${TABLE_NAME}
       WHERE ${conditions.join(' AND ')}
       ORDER BY started_at DESC, span_id DESC
       LIMIT {fetchLimit: UInt32}

@@ -56,6 +56,7 @@ export function buildEvaluationResultRow({
     cost,
     metadata,
     error,
+    issue_ids: existingRow?.issue_ids ?? [],
     created_at:
       existingRow?.created_at ?? toClickHouseDateTime(result.createdAt),
     updated_at: toClickHouseDateTime(result.updatedAt),

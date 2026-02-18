@@ -1,7 +1,7 @@
 import { MAIN_SPAN_TYPES, Span } from '@latitude-data/constants'
 import { EvaluationResultV2 } from '@latitude-data/constants'
 import { clickhouseClient } from '../../../client/clickhouse'
-import { SPANS_TABLE, SpanRow } from '../../../clickhouse/models/spans'
+import { TABLE_NAME, SpanRow } from '../../../schema/models/clickhouse/spans'
 import { scopedQuery } from '../../scope'
 import { spanRowToSpan } from './toSpan'
 
@@ -36,7 +36,7 @@ export const findByEvaluationResults = scopedQuery(
     const result = await clickhouseClient().query({
       query: `
       SELECT *
-      FROM ${SPANS_TABLE} FINAL
+      FROM ${TABLE_NAME} FINAL
       WHERE workspace_id = {workspaceId: UInt64}
         AND (span_id, trace_id) IN (${tuples})
         AND type IN ({mainTypes: Array(String)})

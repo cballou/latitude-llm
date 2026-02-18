@@ -1,6 +1,6 @@
 import { Span, SpanType } from '@latitude-data/constants'
 import { clickhouseClient } from '../../../client/clickhouse'
-import { SPANS_TABLE, SpanRow } from '../../../clickhouse/models/spans'
+import { TABLE_NAME, SpanRow } from '../../../schema/models/clickhouse/spans'
 import { scopedQuery } from '../../scope'
 import { spanRowToSpan } from './toSpan'
 
@@ -30,7 +30,7 @@ export const findBySpanAndTraceIdPairs = scopedQuery(
     const result = await clickhouseClient().query({
       query: `
       SELECT *
-      FROM ${SPANS_TABLE} FINAL
+      FROM ${TABLE_NAME} FINAL
       WHERE workspace_id = {workspaceId: UInt64}
         AND (span_id, trace_id) IN (${tuples})
       ORDER BY started_at ASC, span_id ASC
@@ -60,7 +60,7 @@ export const findByParentAndType = scopedQuery(
     const result = await clickhouseClient().query({
       query: `
       SELECT *
-      FROM ${SPANS_TABLE} FINAL
+      FROM ${TABLE_NAME} FINAL
       WHERE workspace_id = {workspaceId: UInt64}
         AND parent_id = {parentId: String}
         AND type = {type: String}
@@ -92,7 +92,7 @@ export const findCompletionsByParentIds = scopedQuery(
     const result = await clickhouseClient().query({
       query: `
       SELECT *
-      FROM ${SPANS_TABLE} FINAL
+      FROM ${TABLE_NAME} FINAL
       WHERE workspace_id = {workspaceId: UInt64}
         AND type = {type: String}
         AND parent_id IN ({spanIds: Array(String)})

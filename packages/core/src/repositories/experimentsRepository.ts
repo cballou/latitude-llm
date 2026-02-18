@@ -25,7 +25,17 @@ import {
 } from '../schema/models/types/Experiment'
 import Repository from './repositoryV2'
 import { isClickHouseSpansReadEnabled } from '../services/workspaceFeatures/isClickHouseSpansReadEnabled'
+import { isClickHouseEvaluationResultsReadEnabled } from '../services/workspaceFeatures/isClickHouseEvaluationResultsReadEnabled'
 import { getExperimentRunMetadata as chGetExperimentRunMetadata } from '../queries/clickhouse/spans/getExperimentRunMetadata'
+import { getExperimentAggregations } from '../queries/clickhouse/evaluationResultsV2/getExperimentAggregations'
+import { getExperimentEvaluationAggregations } from '../queries/clickhouse/evaluationResultsV2/getExperimentEvaluationAggregations'
+
+type ExperimentAggregation = {
+  passedEvals: number
+  failedEvals: number
+  evalErrors: number
+  totalScore: number
+}
 
 export class ExperimentsRepository extends Repository<Experiment> {
   get scopeFilter() {
@@ -137,6 +147,44 @@ export class ExperimentsRepository extends Repository<Experiment> {
     )
   }
 
+  private async getClickHouseAggregations(
+    params:
+      | { documentUuid: string; experimentUuids?: never; experimentIds?: never }
+      | {
+          documentUuid?: never
+          experimentUuids: string[]
+          experimentIds?: never
+        }
+      | {
+          documentUuid?: never
+          experimentUuids?: never
+          experimentIds: number[]
+        },
+  ): Promise<Map<number, ExperimentAggregation>> {
+    const rows = await getExperimentAggregations({
+      workspaceId: this.workspaceId,
+      documentUuid: 'documentUuid' in params ? params.documentUuid : undefined,
+      experimentUuids:
+        'experimentUuids' in params ? params.experimentUuids : undefined,
+      experimentIds:
+        'experimentIds' in params ? params.experimentIds : undefined,
+    })
+
+    return new Map<number, ExperimentAggregation>(
+      rows
+        .filter((row) => row.experiment_id !== null)
+        .map((row) => [
+          row.experiment_id!,
+          {
+            passedEvals: row.passed_evals,
+            failedEvals: row.failed_evals,
+            evalErrors: row.eval_errors,
+            totalScore: row.total_score ?? 0,
+          },
+        ]),
+    )
+  }
+
   async findByDocumentUuid({
     documentUuid,
     page,
@@ -146,6 +194,33 @@ export class ExperimentsRepository extends Repository<Experiment> {
     page: number
     pageSize: number
   }): Promise<ExperimentDto[]> {
+    const shouldUseClickHouseEvals =
+      await isClickHouseEvaluationResultsReadEnabled(this.workspaceId, this.db)
+
+    if (shouldUseClickHouseEvals) {
+      const rows = await this.scope
+        .where(
+          and(this.scopeFilter, eq(experiments.documentUuid, documentUuid)),
+        )
+        .orderBy(desc(experiments.createdAt))
+        .limit(pageSize)
+        .offset((page - 1) * pageSize)
+
+      const aggregations = await this.getClickHouseAggregations({
+        documentUuid,
+      })
+
+      return rows.map((row) =>
+        this.experimentDtoPresenter({
+          ...row,
+          passedEvals: aggregations.get(row.id)?.passedEvals ?? 0,
+          failedEvals: aggregations.get(row.id)?.failedEvals ?? 0,
+          evalErrors: aggregations.get(row.id)?.evalErrors ?? 0,
+          totalScore: aggregations.get(row.id)?.totalScore ?? 0,
+        }),
+      )
+    }
+
     const aggregatedResults = await this.aggregatedResultsSubquery({
       documentUuid,
     }).then((r) => r.unwrap())
@@ -181,6 +256,36 @@ export class ExperimentsRepository extends Repository<Experiment> {
   }
 
   async findByUuid(uuid: string): PromisedResult<ExperimentDto, LatitudeError> {
+    const shouldUseClickHouseEvals =
+      await isClickHouseEvaluationResultsReadEnabled(this.workspaceId, this.db)
+
+    if (shouldUseClickHouseEvals) {
+      const row = await this.scope
+        .where(and(this.scopeFilter, eq(experiments.uuid, uuid)))
+        .limit(1)
+        .then((r) => r[0])
+
+      if (!row) {
+        return Result.error(
+          new NotFoundError(`Experiment not found with uuid '${uuid}'`),
+        )
+      }
+
+      const aggregations = await this.getClickHouseAggregations({
+        experimentUuids: [uuid],
+      })
+
+      return Result.ok(
+        this.experimentDtoPresenter({
+          ...row,
+          passedEvals: aggregations.get(row.id)?.passedEvals ?? 0,
+          failedEvals: aggregations.get(row.id)?.failedEvals ?? 0,
+          evalErrors: aggregations.get(row.id)?.evalErrors ?? 0,
+          totalScore: aggregations.get(row.id)?.totalScore ?? 0,
+        }),
+      )
+    }
+
     const result = await this.aggregatedResultsSubquery({
       experimentUuid: uuid,
     })
@@ -212,6 +317,29 @@ export class ExperimentsRepository extends Repository<Experiment> {
   async findByIds(ids: number[]): Promise<ExperimentDto[]> {
     if (!ids.length) return []
 
+    const shouldUseClickHouseEvals =
+      await isClickHouseEvaluationResultsReadEnabled(this.workspaceId, this.db)
+
+    if (shouldUseClickHouseEvals) {
+      const rows = await this.scope
+        .where(and(this.scopeFilter, inArray(experiments.id, ids)))
+        .orderBy(desc(experiments.createdAt))
+
+      const aggregations = await this.getClickHouseAggregations({
+        experimentIds: ids,
+      })
+
+      return rows.map((row) =>
+        this.experimentDtoPresenter({
+          ...row,
+          passedEvals: aggregations.get(row.id)?.passedEvals ?? 0,
+          failedEvals: aggregations.get(row.id)?.failedEvals ?? 0,
+          evalErrors: aggregations.get(row.id)?.evalErrors ?? 0,
+          totalScore: aggregations.get(row.id)?.totalScore ?? 0,
+        }),
+      )
+    }
+
     const aggregatedResults = await this.aggregatedResultsSubquery({
       ids,
     }).then((r) => r.unwrap())
@@ -236,6 +364,47 @@ export class ExperimentsRepository extends Repository<Experiment> {
   async getScores(
     uuid: string,
   ): PromisedResult<ExperimentScores, LatitudeError> {
+    const shouldUseClickHouseEvals =
+      await isClickHouseEvaluationResultsReadEnabled(this.workspaceId, this.db)
+
+    if (shouldUseClickHouseEvals) {
+      const experiment = await this.db
+        .select({ id: experiments.id })
+        .from(experiments)
+        .where(and(this.scopeFilter, eq(experiments.uuid, uuid)))
+        .then((r) => r[0])
+
+      if (!experiment) {
+        return Result.error(
+          new NotFoundError(`Experiment not found with uuid '${uuid}'`),
+        )
+      }
+
+      const aggregations = await getExperimentEvaluationAggregations({
+        workspaceId: this.workspaceId,
+        experimentUuids: [uuid],
+      })
+
+      const filteredAggr = aggregations.filter(
+        (a) => a.experiment_id === experiment.id,
+      )
+
+      if (filteredAggr.length === 0) {
+        return Result.ok({})
+      }
+
+      return Result.ok(
+        filteredAggr.reduce((acc: ExperimentScores, r) => {
+          acc[r.evaluation_uuid] = {
+            count: r.count,
+            totalScore: r.total_score ?? 0,
+            totalNormalizedScore: r.total_normalized_score ?? 0,
+          }
+          return acc
+        }, {}),
+      )
+    }
+
     const result = await this.db
       .select({
         experimentUuid: experiments.uuid,
