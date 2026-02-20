@@ -15,34 +15,29 @@ fi
 [ -n "$_SAVED_DB" ] && CLICKHOUSE_DB="$_SAVED_DB"
 
 if [ -z "${CLICKHOUSE_URL}" ]; then
-  echo "Error: CLICKHOUSE_URL is not configured."
-  echo "Please set CLICKHOUSE_URL in your environment variables."
-  exit 1
+  echo "Info: CLICKHOUSE_URL not configured, skipping ClickHouse migrations."
+  exit 0
 fi
 
 if [ -z "${CLICKHOUSE_MIGRATION_URL}" ]; then
-  echo "Error: CLICKHOUSE_MIGRATION_URL is not configured."
-  echo "Please set CLICKHOUSE_MIGRATION_URL in your environment variables."
-  exit 1
+  echo "Info: CLICKHOUSE_MIGRATION_URL not configured, skipping ClickHouse migrations."
+  exit 0
 fi
 
 if [ -z "${CLICKHOUSE_USER}" ]; then
-  echo "Error: CLICKHOUSE_USER is not set."
-  echo "Please set CLICKHOUSE_USER in your environment variables."
-  exit 1
+  echo "Info: CLICKHOUSE_USER not set, skipping ClickHouse migrations."
+  exit 0
 fi
 
 if [ -z "${CLICKHOUSE_PASSWORD}" ]; then
-  echo "Error: CLICKHOUSE_PASSWORD is not set."
-  echo "Please set CLICKHOUSE_PASSWORD in your environment variables."
-  exit 1
+  echo "Info: CLICKHOUSE_PASSWORD not set, skipping ClickHouse migrations."
+  exit 0
 fi
 
 if ! command -v migrate &>/dev/null; then
-  echo "Error: golang-migrate is not installed or not in PATH."
-  echo "Please install golang-migrate via 'brew install golang-migrate' to run this script."
-  echo "Visit https://github.com/golang-migrate/migrate for more installation instructions."
-  exit 1
+  echo "Info: golang-migrate is not installed, skipping ClickHouse migrations."
+  echo "Install via 'brew install golang-migrate' or visit https://github.com/golang-migrate/migrate"
+  exit 0
 fi
 
 if [ -z "${CLICKHOUSE_DB}" ]; then
