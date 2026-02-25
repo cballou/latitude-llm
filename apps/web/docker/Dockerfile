@@ -269,6 +269,12 @@ RUN set -e; \
   mkdir -p /app/apps/web/public/files; \
   chown -R 1001:1001 /app/storage/files /app/apps/web/public/files
 
+RUN grep -roh 'dd-trace-[a-f0-9]\{16\}' /app/apps/web/.next/server/chunks/ 2>/dev/null \
+  | sort -u \
+  | while read name; do \
+      ln -sf /app/apps/web/node_modules/dd-trace /app/apps/web/node_modules/"$name"; \
+    done || true
+
 USER nextjs
 
 WORKDIR /app/apps/web
