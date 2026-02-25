@@ -4,7 +4,7 @@
   "private": true,
   "scripts": {
     "workers:build": "rollup -c rollup.config.workers.mjs",
-    "build": "pnpm run workers:build && next build --turbopack",
+    "build": "pnpm run workers:build && next build --webpack",
     "workers:watch": "rollup -c rollup.config.workers.mjs -w",
     "dev": "next dev --turbopack",
     "dev:debug": "NODE_DEBUG=latitude:debug NODE_OPTIONS='--inspect=0.0.0.0:9229' ./node_modules/.bin/next dev",
